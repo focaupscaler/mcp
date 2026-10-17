@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "foca-upscaler": {
+      "type": "http",
+      "url": "https://focaupscaler.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer <YOUR_FOCA_API_KEY>"
+      }
+    }
+  }
+}

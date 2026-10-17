@@ -1,0 +1,260 @@
+{
+  "serverInfo": { "name": "foca-upscaler", "version": "1.0.0" },
+  "authentication": { "required": true, "schemes": ["bearer"] },
+  "tools": [
+    {
+      "name": "get_upscale_info",
+      "title": "Get image upscaling information",
+      "description": "Check top-level balance and can_create_tasks, available output tiers, prices, and input limits before creating paid tasks.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": { "taskSupport": "forbidden" },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "engine": { "type": "string", "const": "physics" },
+              "balance": { "type": "number" },
+              "can_create_tasks": { "type": "boolean" },
+              "tiers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "resolution_tier": {
+                      "type": "number",
+                      "enum": [2, 4, 8, 16]
+                    },
+                    "credits": { "type": "number" },
+                    "available": { "type": "boolean" }
+                  },
+                  "required": ["resolution_tier", "credits", "available"],
+                  "additionalProperties": false
+                }
+              },
+              "max_file_size_bytes": { "type": "number" },
+              "formats": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": [
+              "engine",
+              "balance",
+              "can_create_tasks",
+              "tiers",
+              "max_file_size_bytes",
+              "formats"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": { "type": "string" },
+                  "message": { "type": "string" }
+                },
+                "required": ["code", "message"],
+                "additionalProperties": {}
+              }
+            },
+            "required": ["error"],
+            "additionalProperties": false
+          }
+        ],
+        "type": "object",
+        "properties": {},
+        "additionalProperties": {}
+      }
+    },
+    {
+      "name": "upscale_image",
+      "title": "Create an image upscaling task",
+      "description": "Create a paid asynchronous task from an HTTPS image URL using the physics engine. Requires an active paid subscription or a previously successful credit-pack purchase, sufficient credits, and tier access under the account's plan. The 2K/4K/8K/16K tiers cost 15/30/60/120 credits. Retry the same request with the same idempotency_key, image URL, and resolution_tier.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "image_url": {
+            "description": "Publicly retrievable HTTPS image URL.",
+            "type": "string",
+            "format": "uri"
+          },
+          "resolution_tier": {
+            "description": "Output tier: 2, 4, 8, or 16. Defaults to 2.",
+            "default": 2,
+            "type": "number",
+            "enum": [2, 4, 8, 16]
+          },
+          "idempotency_key": {
+            "description": "A 1–128 character key. Preserve it when retrying the same image URL and tier. Idempotency records are retained for at least 30 days; after retention expires, reusing an old key may create a new task and charge credits again.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": ["image_url", "idempotency_key"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": { "taskSupport": "forbidden" },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "task_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["pending", "processing", "succeeded", "failed"]
+              },
+              "credits_charged": { "type": "number" },
+              "credits_remaining": { "type": "number" },
+              "resolution_tier": { "type": "number", "enum": [2, 4, 8, 16] },
+              "download_url": { "type": "string", "pattern": "^https:\\/\\/" },
+              "expires_at": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "error_code": { "type": "string" }
+            },
+            "required": [
+              "task_id",
+              "status",
+              "credits_charged",
+              "credits_remaining",
+              "resolution_tier"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": { "type": "string" },
+                  "message": { "type": "string" }
+                },
+                "required": ["code", "message"],
+                "additionalProperties": {}
+              }
+            },
+            "required": ["error"],
+            "additionalProperties": false
+          }
+        ],
+        "type": "object",
+        "properties": {},
+        "additionalProperties": {}
+      }
+    },
+    {
+      "name": "get_upscale_task",
+      "title": "Get an image upscaling task",
+      "description": "Read an account-owned task in pending, processing, succeeded, or failed state with top-level credits_remaining. Repeat this tool call about every 5 seconds until the task reaches succeeded or failed; each call reads the stored database state without polling the image provider. A successful result includes a temporary download_url and expires_at.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "description": "The UUID returned when creating an upscaling task.",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$"
+          }
+        },
+        "required": ["task_id"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": { "taskSupport": "forbidden" },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "task_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["pending", "processing", "succeeded", "failed"]
+              },
+              "credits_charged": { "type": "number" },
+              "credits_remaining": { "type": "number" },
+              "resolution_tier": { "type": "number", "enum": [2, 4, 8, 16] },
+              "download_url": { "type": "string", "pattern": "^https:\\/\\/" },
+              "expires_at": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "error_code": { "type": "string" }
+            },
+            "required": [
+              "task_id",
+              "status",
+              "credits_charged",
+              "credits_remaining",
+              "resolution_tier"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": { "type": "string" },
+                  "message": { "type": "string" }
+                },
+                "required": ["code", "message"],
+                "additionalProperties": {}
+              }
+            },
+            "required": ["error"],
+            "additionalProperties": false
+          }
+        ],
+        "type": "object",
+        "properties": {},
+        "additionalProperties": {}
+      }
+    }
+  ],
+  "resources": [],
+  "prompts": []
+}

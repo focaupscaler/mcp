@@ -1,0 +1,37 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.focaupscaler/upscaler",
+  "title": "Foca Upscaler",
+  "description": "Upscale images from HTTPS URLs with account credits and retrieve async results.",
+  "version": "1.0.0",
+  "websiteUrl": "https://focaupscaler.com/docs/mcp",
+  "icons": [
+    {
+      "src": "https://focaupscaler.com/mcp/icon-512.png",
+      "mimeType": "image/png",
+      "sizes": ["512x512"]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://focaupscaler.com/api/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Create an API key in Foca account settings and provide it as a Bearer token.",
+          "isRequired": true,
+          "isSecret": true,
+          "value": "Bearer {api_key}",
+          "variables": {
+            "api_key": {
+              "description": "Foca MCP API key",
+              "isRequired": true,
+              "isSecret": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
