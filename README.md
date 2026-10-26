@@ -23,7 +23,15 @@ Sign in to Foca and [create an API key](https://focaupscaler.com/settings/api-ke
 
 Choose one of the six configurations below. Foca runs the server for you. Claude Desktop uses a local bridge and requires Node.js with `npx`.
 
-### Cursor
+### Cursor Marketplace plugin
+
+This repository includes a Cursor plugin manifest at `.cursor-plugin/plugin.json` and a remote MCP configuration in `mcp.json`. Once the plugin is available in your marketplace, install **foca-upscaler** from Customize → Plugins, then configure `FOCA_API_KEY` with a key from [API key settings](https://focaupscaler.com/settings/api-keys). Never commit a configured key. Marketplace publication is subject to review.
+
+For local testing, copy the plugin files into `~/.cursor/plugins/local/foca-upscaler`, reload Cursor, and confirm the Foca MCP server appears in Customize. Configure your own key through the client configuration UI. The plugin contains configuration only; Foca hosts the processing service.
+
+Start with this read-only prompt: “Call Foca get_upscale_info and show my balance and available tiers. Do not create a task.” Queries do not charge task credits. A new default 2K task costs 15 credits and requires paid access. See the [MCP guide](https://focaupscaler.com/docs/mcp) for details.
+
+### Cursor manual configuration
 
 Add this server to your MCP settings (`.cursor/mcp.json`):
 

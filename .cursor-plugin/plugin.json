@@ -1,0 +1,33 @@
+{
+  "name": "foca-upscaler",
+  "version": "1.0.0",
+  "description": "Upscale images from HTTPS URLs, check credits, and retrieve results with Foca MCP.",
+  "author": {
+    "name": "Foca Upscaler",
+    "email": "support@focaupscaler.com"
+  },
+  "homepage": "https://focaupscaler.com/docs/mcp",
+  "repository": "https://github.com/focaupscaler/mcp",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "image-upscaling",
+    "image-processing",
+    "ai"
+  ],
+  "logo": "assets/icon-512.png",
+  "mcpServers": "mcp.json",
+  "variables": {
+    "type": "object",
+    "properties": {
+      "FOCA_API_KEY": {
+        "type": "string",
+        "title": "Foca API key",
+        "description": "Create an MCP API key at https://focaupscaler.com/settings/api-keys. New keys require paid access."
+      }
+    },
+    "required": [
+      "FOCA_API_KEY"
+    ]
+  }
+}
